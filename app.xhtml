@@ -1,0 +1,23 @@
+<!DOCTYPE html SYSTEM "chrome://ccedgetraversal-graph/locale/app.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" ng-app="ccedgetraversal-graph">
+	<head>
+		<title>&ccedgetraversal-graph.app.title;</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+		<meta name="description" content="&ccedgetraversal-graph.app.desc;" />
+		<link rel="shortcut icon" href="chrome://ccedgetraversal-graph/content/resources/images/icon16.png" type="image/png" />
+		
+		<link rel="stylesheet" type="text/css" media="screen" href="chrome://ccedgetraversal-graph/content/resources/styles/app.css" />
+		
+		<script src="chrome://ccedgetraversal-graph/content/resources/scripts/angular.min.js"></script>
+		<script src="chrome://ccedgetraversal-graph/content/resources/scripts/app.js"></script>
+
+	</head>
+	<body ng-controller="BodyController as BC">
+		Start with lines containing string: <input type="text" ng-model="BC.start_str" size="60" />
+		<br />
+		Path to cc edge log file: <input type="button" value="{{BC.log_path ? 'Change' : 'Select' }} Log File" ng-click="BC.BrowseSelectFile('log_path')"/>
+		<i>{{BC.log_path}}</i>
+		<br />
+		<input type="button" value="Get graphviz copy paste code for graph" />
+	</body>
+</html>

@@ -1,0 +1,5 @@
+<!ENTITY ccedgetraversal-graph.app.addon-name 'CCEdgeTraversal Graph'>
+<!ENTITY ccedgetraversal-graph.app.addon-description 'Tool for adding and/or removing mailto service handlers to Firefox for popular webmail services.'>
+
+<!ENTITY ccedgetraversal-graph.app.title 'CCEdgeTraversal Graph'>
+<!ENTITY ccedgetraversal-graph.app.desc 'Tool for adding and/or removing mailto service handlers to Firefox for popular webmail services.'>
