@@ -13,10 +13,16 @@
 
 	</head>
 	<body ng-controller="BodyController as BC">
-		Start with lines containing string: <input type="text" ng-model="BC.start_str" size="60" />
+		String contained on child/target address lines (this should be a string that is found on lines that dont start with ">"):
+		<input type="text" ng-model="BC.start_str" size="60" />
 		<br />
 		Path to cc edge log file: <input type="button" value="{{BC.log_path ? 'Change' : 'Select' }} Log File" ng-click="BC.BrowseSelectFile('log_path')"/>
 		<i>{{BC.log_path}}</i>
+		<br />
+		Max ancestor:
+		<input type="text" ng-model="BC.max_depth" size="5" />
+		<br />
+		<br />
 		<br />
 		<input type="button" value="Get graphviz copy paste code for graph" onclick="readLogAndGetCode()" />
 		<br />
