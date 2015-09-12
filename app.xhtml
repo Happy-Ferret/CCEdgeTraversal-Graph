@@ -18,6 +18,9 @@
 		Path to cc edge log file: <input type="button" value="{{BC.log_path ? 'Change' : 'Select' }} Log File" ng-click="BC.BrowseSelectFile('log_path')"/>
 		<i>{{BC.log_path}}</i>
 		<br />
-		<input type="button" value="Get graphviz copy paste code for graph" />
+		<input type="button" value="Get graphviz copy paste code for graph" onclick="readLogAndGetCode()" />
+		<br />
+		<br />
+		<pre>{{BC.graphviz_code}}</pre>
 	</body>
 </html>
