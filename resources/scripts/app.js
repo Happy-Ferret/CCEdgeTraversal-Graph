@@ -106,16 +106,17 @@ function readLogAndGetCode() {
 		var parentsForNextD_hash = {}; // used by d loop
 		
 		// find all the initial parent (any line that includes start_str) addresses:
-		var strPatt = '^([A-Z0-9]+) .*?' + escapeRegExp(gAngScope.BC.start_str) + '.*?$';
+		var strPatt = '^.*?' + escapeRegExp(gAngScope.BC.start_str) + '.*?$';
 		// alert(strPatt);
 		var patt = new RegExp(strPatt, 'gm');
 		var match;
 		while (match = patt.exec(lastReadLogContents)) {
+			var addressOnLine = /^([A-Z0-9]+) /.exec(match[0]);
 			// graphviz_code.push('\t"' + match[1] + '" [label=" ' + match[0] + '"]');
-			if (/*!(parentsForNextD_hash[match[1]]) && */!(fullParentsHistory[match[1]])) { // match[1] is the address // match[0] is full line which ill call "name"
+			if (/*!(parentsForNextD_hash[addressOnLine[1]]) && */!(fullParentsHistory[addressOnLine[1]])) { //addressOnLine[1] is the address // match[1] is the address // match[0] is full line which ill call "name"
 				// parentsForNextD.push(match[1]);
-				parentsForNextD_hash[match[1]] = match[0];
-				fullParentsHistory[match[1]] = 1;
+				parentsForNextD_hash[addressOnLine[1]] = match[0];
+				fullParentsHistory[addressOnLine[1]] = 1;
 			}
 			console.log(match);
 		}
@@ -144,7 +145,7 @@ function readLogAndGetCode() {
 				// i++;
 				var strPatt = '^> ' + p + '.*?$';
 				// alert(i + ' of ' + totalI + '\n\n' + strPatt);
-				graphviz_code.push('\t// using patt: ' + strPatt);
+				// graphviz_code.push('\t// using patt: ' + strPatt);
 				var patt = new RegExp(strPatt, 'gm');
 				
 				var match;
