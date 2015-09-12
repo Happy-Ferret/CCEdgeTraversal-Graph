@@ -98,7 +98,9 @@ function readLogAndGetCode() {
 		var graphviz_code = [];
 		graphviz_code.push('digraph finite_state_machine {');
 		graphviz_code.push('\trankdir=LR;');
+		graphviz_code.push('\n');
 		
+		// find 0 level, all lines that contain start_str
 		var strPatt = '^.*?([A-Z0-9]+) .*?' + escapeRegExp(gAngScope.BC.start_str) + '.*?$';
 		alert(strPatt);
 		var patt = new RegExp(strPatt, 'gm');
@@ -108,6 +110,71 @@ function readLogAndGetCode() {
 		while (match = patt.exec(lastReadLogContents)) {
 			graphviz_code.push('\t"' + match[1] + '" [label=" ' + match[0] + '"]');
 			parentAddresses.push(match[1]);
+			console.log(match);
+		}
+		
+		graphviz_code.push('\n');
+		
+		// find edges and parent of 0 -> ? level - find for each of the `> addr` what is its parent
+		var nextParentAddresses = [];
+		var nextParentAddressesHash = {};
+		for (var i=0; i<parentAddresses.length; i++) {
+			var strPatt = '^> ' + parentAddresses[i] + '.*?$';
+			alert(i + ' of ' + parentAddresses.length + '\n\n' + strPatt);
+			var patt = new RegExp(strPatt, 'gm');
+			var match;
+			while (match = patt.exec(lastReadLogContents)) {
+				// graphviz_code.push('edge: ' + match[0]);
+				// get parent of this edge
+				var guessCharsEnoughToIncludeEdgeParent = 1000;
+				var hopefullyEnoughContentPriorToThisFind_includesTheParent = lastReadLogContents.substring(match.index - guessCharsEnoughToIncludeEdgeParent, match.index); // parent is the first line above this that does not have start with `> `
+				
+				var parentOfEdge = /[\s\S]*^(([A-Z0-9]+).*?$)/m.exec(hopefullyEnoughContentPriorToThisFind_includesTheParent);
+				// graphviz_code.push('searched for parent of this edge in: "' + hopefullyEnoughContentPriorToThisFind_includesTheParent + '"');
+				// graphviz_code.push('parent of this edge: "' + parentOfEdge[1] + '" and address: "' + parentOfEdge[2] + '"');
+				if (!(parentOfEdge[2] in nextParentAddressesHash)) {
+					nextParentAddresses.push(parentOfEdge[2]);
+					nextParentAddressesHash[parentOfEdge[2]] = parentOfEdge[1];
+				}
+				graphviz_code.push('\t"' + parentOfEdge[2] + '" -> "' + parentAddresses[i] + '" [label="' + match[0] + '"]');
+			}
+		}
+		
+		// label the parents
+		for (var p in nextParentAddressesHash) { // key is address, and value is label
+			graphviz_code.push('\t"' + p + '" [label=" ' + nextParentAddressesHash[p] + '"]');
+		}
+		
+		graphviz_code.push('\n');
+		
+		// find edges and parent of 0 -> ? level - find for each of the `> addr` what is its parent
+		var nextNextParentAddresses = [];
+		var nextNextParentAddressesHash = {};
+		for (var i=0; i<nextParentAddresses.length; i++) {
+			var strPatt = '^> ' + nextParentAddresses[i] + '.*?$';
+			alert(i + ' of ' + nextParentAddresses.length + '\n\n' + strPatt);
+			var patt = new RegExp(strPatt, 'gm');
+			var match;
+			while (match = patt.exec(lastReadLogContents)) {
+				// graphviz_code.push('edge: ' + match[0]);
+				// get parent of this edge
+				var guessCharsEnoughToIncludeEdgeParent = 1000;
+				var hopefullyEnoughContentPriorToThisFind_includesTheParent = lastReadLogContents.substring(match.index - guessCharsEnoughToIncludeEdgeParent, match.index); // parent is the first line above this that does not have start with `> `
+				
+				var parentOfEdge = /[\s\S]*^(([A-Z0-9]+).*?$)/m.exec(hopefullyEnoughContentPriorToThisFind_includesTheParent);
+				// graphviz_code.push('searched for parent of this edge in: "' + hopefullyEnoughContentPriorToThisFind_includesTheParent + '"');
+				// graphviz_code.push('parent of this edge: "' + parentOfEdge[1] + '" and address: "' + parentOfEdge[2] + '"');
+				nextNextParentAddresses.push(parentOfEdge[2]);
+				if (!(parentOfEdge[2] in nextNextParentAddressesHash)) {
+					nextNextParentAddresses.push(parentOfEdge[2]);
+					nextNextParentAddressesHash[parentOfEdge[2]] = parentOfEdge[1];
+				}
+				graphviz_code.push('\t"' + parentOfEdge[2] + '" -> "' + nextParentAddresses[i] + '" [label="' + match[0] + '"]');
+			}
+		}
+		// label the parents
+		for (var p in nextNextParentAddressesHash) { // key is address, and value is label
+			graphviz_code.push('\t"' + p + '" [label=" ' + nextNextParentAddressesHash[p] + '"]');
 		}
 		
 		
