@@ -102,6 +102,7 @@ function readLogAndGetCode() {
 		graphviz_code.push('\n');
 		
 		// var parentsForNextD = []; // used by d loop
+		var fullParentsHistory = {};
 		var parentsForNextD_hash = {}; // used by d loop
 		
 		// find all the initial parent (any line that includes start_str) addresses:
@@ -111,9 +112,10 @@ function readLogAndGetCode() {
 		var match;
 		while (match = patt.exec(lastReadLogContents)) {
 			// graphviz_code.push('\t"' + match[1] + '" [label=" ' + match[0] + '"]');
-			if (!(parentsForNextD_hash[match[1]])) { // match[1] is the address // match[0] is full line which ill call "name"
+			if (/*!(parentsForNextD_hash[match[1]]) && */!(fullParentsHistory[match[1]])) { // match[1] is the address // match[0] is full line which ill call "name"
 				// parentsForNextD.push(match[1]);
 				parentsForNextD_hash[match[1]] = match[0];
+				fullParentsHistory[match[1]] = 1;
 			}
 			console.log(match);
 		}
@@ -132,22 +134,17 @@ function readLogAndGetCode() {
 		// ok start the itterative
 		for (var d=0; d<gAngScope.BC.max_depth; d++) {
 			var parentsForThisD_hash = JSON.parse(JSON.stringify(parentsForNextD_hash));
-			
-			var strPatt;
-			if (d == 0) {
-				strPatt = '^.*?([A-Z0-9]+) .*?' + escapeRegExp(gAngScope.BC.start_str) + '.*?$';
-			} else {
-				
-			}
+			parentsForNextD_hash = {}; // i will put into here only NEW parents that i never iterated over before, if i itereated over a parent before it will show up in fullParentsHistory. reason i added fullParentsHistory is because things can have cyclic references to self
 			
 			// ok now find grandparents of this parent, and the edge between the grandparent and parent
 			graphviz_code.push('\t// level ' + (d + 1) + ' parents of the initially found child addresses');
-			var totalI = Object.keys(parentsForThisD_hash).length;
-			var i = -1;
+			// var totalI = Object.keys(parentsForThisD_hash).length;
+			// var i = -1;
 			for (var p in parentsForThisD_hash) {
-				i++;
+				// i++;
 				var strPatt = '^> ' + p + '.*?$';
 				// alert(i + ' of ' + totalI + '\n\n' + strPatt);
+				graphviz_code.push('\t// using patt: ' + strPatt);
 				var patt = new RegExp(strPatt, 'gm');
 				
 				var match;
@@ -155,15 +152,28 @@ function readLogAndGetCode() {
 					// graphviz_code.push('edge: ' + match[0]); // match[0] is the edge between current parrent address and grandparent
 					// get parent of this edge
 					var guessCharsEnoughToIncludeEdgeParent = 1000;
-					var hopefullyEnoughContentPriorToThisFind_includesTheParent = lastReadLogContents.substring(match.index - guessCharsEnoughToIncludeEdgeParent, match.index); // parent is the first line above this that does not have start with `> `
-					
-					var parentOfEdge = /[\s\S]*^(([A-Z0-9]+).*?$)/m.exec(hopefullyEnoughContentPriorToThisFind_includesTheParent);
+					var guessTry = 1;
+					while (guessTry < 10) {
+						var hopefullyEnoughContentPriorToThisFind_includesTheParent = lastReadLogContents.substring(match.index - (guessCharsEnoughToIncludeEdgeParent * guessTry), match.index); // parent is the first line above this that does not have start with `> `
+						var parentOfEdge = /[\s\S]*^(([A-Z0-9]+).*?$)/m.exec(hopefullyEnoughContentPriorToThisFind_includesTheParent);
+						if (!parentOfEdge) {
+							guessTry++;
+						} else {
+							break;
+						}
+					}
+					if (!parentOfEdge) {
+						throw new Error('tried 10 times to go further back to get parent-of-edge, however could not, so am alerting you that i probably could find it if i kept increasing, so this isnt really bad, just have to do more guessTry then 10 - but i just throw here cuz i never found i needed more then 2k in my experiements, so if i get to 10k its just something i want to know about');
+					}
 					// graphviz_code.push('searched for parent of this edge in: "' + hopefullyEnoughContentPriorToThisFind_includesTheParent + '"');
 					// graphviz_code.push('parent of this edge: "' + parentOfEdge[1] + '" and address: "' + parentOfEdge[2] + '"');
-					if (!(parentOfEdge[2] in parentsForNextD_hash)) {
+					if (/*!(parentOfEdge[2] in parentsForNextD_hash) && */!(parentOfEdge[2] in fullParentsHistory)) {
 						parentsForNextD_hash[parentOfEdge[2]] = parentOfEdge[1]; // parentOfEdge[1] is the "name"/"full row" of the grandparent of the current parent address
+						fullParentsHistory[parentOfEdge[2]] = 1;
 					}
-					graphviz_code.push('\t"' + parentOfEdge[2] + '" -> "' + p + '" [label="' + match[0] + '"]');
+					// if (graphviz_code.indexOf('\t"' + parentOfEdge[2] + '" -> "' + p + '" [label="' + match[0] + '"]') == -1) {
+						graphviz_code.push('\t"' + parentOfEdge[2] + '" -> "' + p + '" [label="' + match[0] + '"]');
+					// }
 				}
 			}
 			
